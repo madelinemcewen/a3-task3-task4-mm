@@ -1,0 +1,100 @@
+---
+title: "a3_task3_madeline_mcewen"
+author: "Madeline"
+date: "10/30/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(janitor)
+library(lubridate)
+library(ggplot2)
+```
+
+## Read in data
+
+```{r}
+
+#put data into lower snake case 
+urchin_data<-read_csv(here("data", "urchins.csv")) %>% 
+  clean_names()
+```
+
+## Comparing distribution of sizes between purple and red urchins
+
+```{r}
+# faceted histogram
+ggplot(data=urchin_data, aes(x=size)) +
+  geom_histogram(bins=15) +
+  facet_wrap(~common_name)+
+  labs(x="Size (cm)", y="Amount of Urchins")
+```
+
+```{r}
+#boxplot
+ggplot(data=urchin_data, aes(x=common_name, y=size))+
+  geom_boxplot()+
+  labs(x="Common Name", y="Size (cm)")
+```
+
+## Summary table with mean, median, sd, and n
+- Use group_by() and summarize()
+
+```{r}
+urchin_stats <- urchin_data %>% 
+  group_by(common_name) %>% 
+  summarize(mean = mean(size), 
+            standard_deviation = sd(size), 
+            median= median(size), 
+            n=n())
+urchin_stats
+```
+
+Looking at the histogram ggplots, the red urchin is much more evenly spread than the purple. Red also has a smaller standard deviation which indicates the values are closer to the mean, which we can see when we look at the results from our graphs and summary table. 
+While the means between species differ by only about 2.3, the range of sizes is only between 2.5 and 15. Keeping this in mind, a difference of 2.3 is actually quite large. 
+
+
+## Exploring purple urchins 
+- Use mutate() and case_when()
+
+```{r}
+purple_urchins<-urchin_data %>% 
+  filter(common_name == "Purple Urchin") %>% 
+  mutate(Date=ymd(date)) %>% 
+  mutate(year= year(Date)) %>% 
+  mutate(site_full=case_when(
+    site == "NAPL" ~"Naples Reef",
+    site == "AQUE" ~"Arroyo Quemado Reef",
+    site == "CARP" ~"Carpinteria Reef",
+    site == "MOHK" ~"Mohawk Reef",
+    site == "IVEE" ~ "Isla Vista Reef"
+  ))
+```
+
+## Summary table 
+### Contains total number of purple urchins observed by site and year
+- use count()
+
+```{r}
+purple_data<-purple_urchins %>% 
+  count(site, year)
+
+purple_data
+```
+
+```{r}
+ggplot(data=purple_data, aes(x=year, y=n))+
+  geom_boxplot(aes(fill=site))+
+                 scale_fill_manual(values= c("#C4961A","#D16103","#C3D7A4","#4E84C4","#F4EDCA"))+
+  theme_bw()+
+  labs(x="Year", y="Amount of purple urchins")
+
+```
+
+
+
+
+
