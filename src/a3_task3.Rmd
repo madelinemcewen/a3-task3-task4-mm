@@ -51,6 +51,9 @@ urchin_stats <- urchin_data %>%
             median= median(size), 
             n=n())
 urchin_stats
+kable(urchin_stats[1:2,], caption=NULL,format="html") %>% 
+  
+  kable_classic_2(bootstrap_options = "condensed", full_width = F)
 ```
 
 Looking at the histogram ggplots, the red urchin is much more evenly spread than the purple. Red also has a smaller standard deviation which indicates the values are closer to the mean, which we can see when we look at the results from our graphs and summary table. 
@@ -63,7 +66,7 @@ While the means between species differ by only about 2.3, the range of sizes is 
 ```{r}
 purple_urchins<-urchin_data %>% 
   filter(common_name == "Purple Urchin") %>% 
-  mutate(Date=ymd(date)) %>% 
+  mutate(Date=mdy(date)) %>% 
   mutate(year= year(Date)) %>% 
   mutate(site_full=case_when(
     site == "NAPL" ~"Naples Reef",

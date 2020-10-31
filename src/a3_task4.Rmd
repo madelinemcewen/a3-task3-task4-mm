@@ -1,0 +1,136 @@
+---
+title: "a3_task4_madeline_mcewen"
+author: "Madeline"
+date: "10/30/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, results="asis")
+library(tidyverse)
+library(here)
+library(lubridate)
+library(janitor)
+library(knitr)
+library(kableExtra)
+```
+
+## Read in Urchins data
+
+```{r}
+#put data into lower snake case 
+urchin_data<-read_csv(here("data", "urchins.csv")) %>% 
+  clean_names()
+```
+
+## Wrangle data
+- create data with only purple urchins in January 2010 at Naples Reef 
+
+```{r}
+purple_naples_2010 <- urchin_data %>% 
+  filter(common_name == "Purple Urchin") %>% 
+  mutate(Date=mdy(date)) %>% 
+  mutate(year= year(Date)) %>%
+  mutate(month=month(Date)) %>% 
+  filter(site=="NAPL", month=="1", year=="2010")
+```
+
+## Compare mean size of 2 treatments: control and annual
+
+```{r}
+purple_mean<-purple_naples_2010 %>% 
+  group_by(treatment) %>% 
+  summarize(mean=mean(size))
+
+purple_mean
+
+```
+
+## Create exploratory data
+- Create a histogram
+
+```{r}
+ggplot(data=purple_naples_2010, aes(x=size))+
+  geom_histogram(bins = 15)+
+  facet_wrap(~treatment)
+```
+
+- Create a QQ plot
+
+```{r}
+ggplot(data=purple_naples_2010, aes(sample=size))+
+  geom_qq()+
+  facet_wrap(~treatment)
+```
+
+- Create a boxplot
+
+```{r}
+ggplot(data=purple_naples_2010, aes(y=size))+
+  geom_boxplot()+
+  facet_wrap(~treatment)
+```
+
+
+Looking at the graphs and data comparing the sizes of purple urchins in annual and control, they are fairly similar. The histograms show similar distributions between both treatments. They are both slightly abnormal and are skewed a little to the left, but not drastically. However, while the means are similar, the median of the annual treatment is higher, which is helping to create this difference in distribution. The annual treatment also covers a wider range of sizes while the control treatment's range is a bit smaller. 
+
+
+## Create table of descriptive statistics
+- Find mean, median, standard deviation, and sample size of each treatment
+- Format table using kable()
+
+```{r}
+naples_stats <- purple_naples_2010 %>% 
+  group_by(treatment) %>% 
+  summarize(Mean = mean(size), 
+            SD = sd(size), 
+            Median= median(size), 
+            Sample_size=n())
+
+#Format table 
+kable(naples_stats[1:2,], 
+      caption="Naples Data on Purple Urchins January 2010",
+      format="html") %>% 
+  kable_material(bootstrap_options = "condensed",
+                 full_width = F)
+```
+
+## Perform a 2-sample t-test
+
+
+```{r}
+#Create vectors
+
+annual_treatment <- purple_naples_2010 %>% 
+  filter(treatment == "ANNUAL") %>% 
+  pull(size)
+
+control_treatment <- purple_naples_2010 %>% 
+  filter(treatment == "CONTROL") %>% 
+  pull(size)
+
+#Use these vectors for t-test
+
+t.test(annual_treatment,control_treatment)
+```
+### T-test results
+
+The means of these two treatments are very similar - they are only 0.2 cm apart. Looking at only the means I would assume that these random samples were drawn from a population with the same mean. When I look at the p-value, there is a 25% probability that the selected means are this different from the same population. This p-value as well as looking through the rest of the data gives me enough evidence to accept the null hypothesis.  
+The samples are also quite large which gives less room for standard error. We expect to find 95% of confidence intervals to contain this population parameter which gives a pretty good chance that the calculated confidence interval contains the population parameter. 
+
+### Meaning of the p-value
+
+The meaning of the p-value in the sample above is the probability of getting 2 sample means at least this different if they were actually drawn from populations with the same mean. Because the means are not very different, the probability (p-value) is high that they would be from populations with the same mean. 
+
+
+
+
+
+
+
+
+
+
+
+
+
